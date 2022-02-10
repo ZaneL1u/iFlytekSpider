@@ -1,0 +1,19 @@
+{
+  "name": "iFlytekSpider",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Yorksh1re",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^0.25.0",
+    "dayjs": "^1.10.7",
+    "form-data": "^4.0.0",
+    "form-data-encoder-old": "^1.4.3",
+    "formdata-node": "3.7.0",
+    "request": "^2.88.2"
+  }
+}
