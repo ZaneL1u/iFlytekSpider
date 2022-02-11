@@ -10,9 +10,15 @@ const path = require("path");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const localizedFormat = require("dayjs/plugin/localizedFormat");
-const { Readable } = require("stream");
-const { FormDataEncoder } = require("form-data-encoder-old");
-const { FormData } = require("formdata-node");
+const {
+  Readable
+} = require("stream");
+const {
+  FormDataEncoder
+} = require("form-data-encoder-old");
+const {
+  FormData
+} = require("formdata-node");
 const fs = require("fs");
 
 dayjs.extend(utc);
@@ -33,7 +39,12 @@ function random_ua() {
   )} Safari/537.36`;
 }
 
-async function requester(url, { method, headers, params, data }) {
+async function requester(url, {
+  method,
+  headers,
+  params,
+  data
+}) {
   if (!headers) {
     headers = {
       Accept: "*/*",
@@ -48,6 +59,8 @@ async function requester(url, { method, headers, params, data }) {
     headers,
     params,
     data,
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity
   });
 }
 
@@ -60,18 +73,6 @@ function getCode(code) {
 
 function getFileSize(file_path) {
   return fs.statSync(file_path).size;
-  /*
-  var fs = require("fs");
-fs.stat("./JShaman.db",function(error,stats){
-if(error){
-callback("file size error");
-}else{
-//文件大小
-callback(stats.size);
-}
-})
-  
-  */
 }
 
 async function upload(file_path) {
@@ -119,11 +120,16 @@ async function upload(file_path) {
       "Sec-Fetch-Site": "same-origin",
     },
   });
-  return await req;
+  try {
+    Infinity
+    return await req;
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 async function crc32check(fileid, crc32) {
-  return await requester(getCrc32checkUrl(fileid, crc32), {
+  const result = await requester(getCrc32checkUrl(fileid, crc32), {
     method: "post",
     headers: {
       Host: "www.iflyrec.com",
@@ -138,34 +144,71 @@ async function crc32check(fileid, crc32) {
       "Accept-Language": "zh-CN,zh;q=0.9",
     },
   });
+  return result.data.code === '000000'
 }
 
-async function distinguish(path, isGet) {
-  return await requester(distinguishUrl, {
-    method: isGet ? "get" : "post",
+async function distinguish(path, method = "post") {
+  const {
+    data
+  } = await requester(distinguishUrl, {
+    method,
     headers: {
-      Host: "www.iflyrec.com",
-      Connection: "close",
-      Accept: "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36",
-      "X-Biz-Id": "xftj",
-      "Content-Type": "application/json;charset=UTF-8",
-      Origin: "https://www.iflyrec.com",
-      Referer: "https://www.iflyrec.com/html/addMachineOrder.html",
-      "Accept-Encoding": "gzip, deflate",
-      "Accept-Language": "zh-CN,zh;q=0.9",
+      'Host': 'www.iflyrec.com',
+      'Connection': 'close',
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'User-Agent': "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36",
+      'X-Biz-Id': 'xftj',
+      'Content-Type': 'application/json;charset=UTF-8',
+      'Origin': 'https://www.iflyrec.com',
+      'Referer': 'https://www.iflyrec.com/html/addMachineOrder.html',
+      'Accept-Encoding': 'gzip, deflate',
+      'Accept-Language': 'zh-CN,zh;q=0.9'
     },
-    params: { filePath: path, transcriptLanguage: 1 },
-    data: !isGet ? { filePath: path, transcriptLanguage: 1 } : undefined,
+    params: {
+      filePath: path,
+      transcriptLanguage: 1
+    },
+    ...(method === "post" ? {
+      data: {
+        filePath: path,
+        transcriptLanguage: 1
+      }
+    } : [])
   });
+  return data;
 }
 
-upload("C:\\Users\\asus\\Desktop\\test.mp4")
-  .then((e) => {
-    console.log(e.data);
-  })
-  .catch((error) => {
-    console.log(error.error);
-  });
+async function doDistinguish() {
+  const {
+    data: {
+      desc,
+      biz: {
+        fileId,
+        crc32,
+        transPreviewPath,
+        uploadedSize
+      }
+    }
+  } = await upload("./assets/download.mp4")
+  if (desc === 'success' && !(typeof uploadedSize === 'number'))
+    throw new Error("upload failed");
+  if (await crc32check(fileId, crc32)) {
+    await distinguish(transPreviewPath)
+    const interval = setInterval(async () => {
+      let {
+        biz: {
+          transcriptResult
+        }
+      } = await distinguish(transPreviewPath, 'get')
+      if (transcriptResult) {
+        console.log(JSON.parse(transcriptResult))
+        clearInterval(interval)
+      }
+    }, 3000)
+  }
+}
+
+// doDistinguish()
+
+console.log(path.basename("http://www.baidu.com?file=index.html"))
