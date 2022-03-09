@@ -55,17 +55,11 @@ const versionArr = [
 
 const uploadUrl = "https://www.iflyrec.com/AudioStreamService/v1/audios";
 
-function getCrc32checkUrl(fileid, crc32) {
+function getCrc32checkUrl(fileid: any, crc32: any) {
   return `https://www.iflyrec.com/TranscriptOrderService/v1/tempAudios/${fileid}/initAudioInfo?crc32=${crc32}`;
 }
 
 const distinguishUrl =
   "https://www.iflyrec.com/TranscriptPreviewService/v1/aiTranscriptPreviews";
 
-module.exports = {
-  uaArr,
-  versionArr,
-  uploadUrl,
-  getCrc32checkUrl,
-  distinguishUrl,
-};
+export { uaArr, versionArr, uploadUrl, getCrc32checkUrl, distinguishUrl };

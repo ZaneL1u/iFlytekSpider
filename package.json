@@ -1,12 +1,14 @@
 {
-  "name": "iFlytekSpider",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "iflytek-spider-api",
+  "version": "1.0.1",
+  "main": "./src/index.js",
   "author": "Yorksh1re",
   "license": "MIT",
-  "private": true,
   "scripts": {
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "test": "jest",
+    "build": "cross-env NODE_ENV=production && rollup -c rollup.config.js",
+    "publish": "npm publish"
   },
   "dependencies": {
     "axios": "^0.25.0",
@@ -15,5 +17,18 @@
     "form-data-encoder-old": "^1.4.3",
     "formdata-node": "3.7.0",
     "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
+    "@types/jest": "^27.4.1",
+    "cross-env": "^7.0.3",
+    "jest": "^27.5.1",
+    "rollup": "^2.70.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.31.2",
+    "typescript": "^4.6.2"
   }
 }

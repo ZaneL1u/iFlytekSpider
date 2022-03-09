@@ -1,13 +1,12 @@
-const {
+import {
   uaArr,
   versionArr,
   uploadUrl,
   getCrc32checkUrl,
   distinguishUrl,
-} = require("./constant");
+} from "./constant";
 
 const axios = require("axios");
-const path = require("path");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const localizedFormat = require("dayjs/plugin/localizedFormat");
@@ -19,20 +18,23 @@ const { v4: uuidv4 } = require("uuid");
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
 
+Math = Math as any;
+
 // 随机从arr里选择一项
-Math.randomChoice = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const randomChoice = (arr: Array<any>) =>
+  arr[Math.floor(Math.random() * arr.length)];
 // 区间随机选择
-Math.rd = (num1, num2) => Math.random() * (num2 - num1) + num1;
+const rd = (num1: number, num2: number) => Math.random() * (num2 - num1) + num1;
 // 随机ua
 function random_ua() {
-  return `Mozilla/5.0 (Windows NT ${Math.randomChoice(
+  return `Mozilla/5.0 (Windows NT ${randomChoice(
     uaArr
-  )}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${Math.randomChoice(
+  )}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${randomChoice(
     versionArr
   )} Safari/537.36`;
 }
 //
-async function requester(url, { method, headers, params, data }) {
+async function requester(url: string, { method, headers, params, data }: any) {
   if (!headers) {
     headers = {
       Accept: "*/*",
@@ -52,13 +54,12 @@ async function requester(url, { method, headers, params, data }) {
   });
 }
 
-async function getFile(url) {
+async function getFile(url: string) {
   return (await axios.get(url, { responseType: "arraybuffer" })).data;
 }
 
-async function upload(url) {
-  const file = new Blob([await getFile(url)]);
-  console.log(file);
+async function upload(url: string) {
+  const file = await getFile(url);
   let formData = new FormData();
   formData.set("language", 1);
   formData.set("id", "WU_FILE_0");
@@ -66,9 +67,7 @@ async function upload(url) {
   formData.set("type", "video/mp4");
   formData.set(
     "lastModifiedDate",
-    dayjs()
-      .utc()
-      .format("ddd MMM D YYYY HH:mm:ss") + " GMT+0800 (中国标准时间)"
+    dayjs().utc().format("ddd MMM D YYYY HH:mm:ss") + " GMT+0800 (中国标准时间)"
   );
   formData.set("size", file.length);
   formData.append("file", file);
@@ -77,42 +76,36 @@ async function upload(url) {
     "----WebKitFormBoundaryXlZUr7IUQezLdWKz"
   );
 
-  try {
-    return await requester(uploadUrl, {
-      method: "post",
-      params: {
-        type: "whole",
-        folder: Math.rd(10000000000000000, 99999999999999999).toString(),
-      },
-      data: Readable.from(encoder.encode()),
-      headers: {
-        Host: "www.iflyrec.com",
-        Connection: "close",
-        "User-Agent": random_ua(),
-        "X-Biz-Id": "xftj",
-        "Content-Type": `multipart/form-data; boundary=----WebKitFormBoundaryXlZUr7IUQezLdWKz`,
-        Accept: "*/*",
-        Origin: "https://www.iflyrec.com",
-        Referer: "https://www.iflyrec.com/html/addMachineOrder.html",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        Connection: "keep-alive",
-        DNT: "1",
-        "sec-ch-ua": ` Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96`,
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": `"Windows"`,
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
-      },
-    });
-  } catch (err) {
-    console.log(err);
-    throw new Error("上传失败！");
-  }
+  return await requester(uploadUrl, {
+    method: "post",
+    params: {
+      type: "whole",
+      folder: rd(10000000000000000, 99999999999999999).toString(),
+    },
+    data: Readable.from(encoder.encode()),
+    headers: {
+      Host: "www.iflyrec.com",
+      Connection: "close",
+      "User-Agent": random_ua(),
+      "X-Biz-Id": "xftj",
+      "Content-Type": `multipart/form-data; boundary=----WebKitFormBoundaryXlZUr7IUQezLdWKz`,
+      Accept: "*/*",
+      Origin: "https://www.iflyrec.com",
+      Referer: "https://www.iflyrec.com/html/addMachineOrder.html",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      DNT: "1",
+      "sec-ch-ua": ` Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96`,
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": `"Windows"`,
+      "Sec-Fetch-Dest": "empty",
+      "Sec-Fetch-Mode": "cors",
+      "Sec-Fetch-Site": "same-origin",
+    },
+  });
 }
 
-async function crc32check(fileid, crc32) {
+async function crc32check(fileid: string, crc32: string) {
   const result = await requester(getCrc32checkUrl(fileid, crc32), {
     method: "post",
     headers: {
@@ -131,7 +124,7 @@ async function crc32check(fileid, crc32) {
   return result.data.code === "000000";
 }
 
-async function distinguish(path, method = "post") {
+async function distinguish(path: string, method = "post") {
   const { data: result } = await requester(distinguishUrl, {
     method,
     headers: {
@@ -164,8 +157,37 @@ async function distinguish(path, method = "post") {
   return result;
 }
 
-module.exports = {
-  upload,
-  crc32check,
-  distinguish,
-};
+async function doDistinguish(url: string) {
+  const {
+    data: {
+      desc,
+      biz: { fileId, crc32, transPreviewPath, uploadedSize },
+    },
+  } = await upload(url);
+  if (desc === "success" && !(typeof uploadedSize === "number"))
+    throw new Error("upload failed");
+  if (await crc32check(fileId, crc32)) {
+    await distinguish(transPreviewPath);
+    let times = 0;
+    const totalDegree = 10;
+    return await new Promise((resolve, reject) => {
+      const interval = setInterval(async () => {
+        times++;
+        let {
+          biz: { transcriptResult },
+        } = await distinguish(transPreviewPath, "get");
+        if (transcriptResult) {
+          resolve(JSON.parse(transcriptResult));
+          clearInterval(interval);
+        } else {
+          if (times >= totalDegree) {
+            reject({ status: false, msg: "转换失败" });
+            clearInterval(interval);
+          }
+        }
+      }, 3000);
+    });
+  }
+}
+
+export default doDistinguish;
