@@ -1,7 +1,7 @@
 {
   "name": "iflytek-spider-api",
   "description": "科大讯飞爬虫API",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "./dist/index.js",
   "author": "Yorksh1re",
   "license": "MIT",
@@ -10,7 +10,7 @@
     "spider"
   ],
   "scripts": {
-    "dev": "node index.js",
+    "dev": "ts-node src/index.js",
     "test": "jest",
     "build": "cross-env NODE_ENV=production && rollup -c rollup.config.js",
     "publish": "npm publish"

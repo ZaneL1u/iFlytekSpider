@@ -157,7 +157,7 @@ async function distinguish(path: string, method = "post") {
   return result;
 }
 
-async function doDistinguish(url: string) {
+async function doDistinguish(url: string, timeout = -1, interval = 3) {
   const {
     data: {
       desc,
@@ -169,23 +169,23 @@ async function doDistinguish(url: string) {
   if (await crc32check(fileId, crc32)) {
     await distinguish(transPreviewPath);
     let times = 0;
-    const totalDegree = 10;
     return await new Promise((resolve, reject) => {
-      const interval = setInterval(async () => {
+      const spacer = setInterval(async () => {
         times++;
-        let {
-          biz: { transcriptResult },
-        } = await distinguish(transPreviewPath, "get");
-        if (transcriptResult) {
-          resolve(JSON.parse(transcriptResult));
-          clearInterval(interval);
+        let result = await distinguish(transPreviewPath, "get");
+        if (result.biz.transcriptResult) {
+          resolve(JSON.parse(result.biz.transcriptResult));
+          clearInterval(spacer);
         } else {
-          if (times >= totalDegree) {
-            reject({ status: false, msg: "转换失败" });
-            clearInterval(interval);
+          if (times >= (timeout > 0 ? timeout : 999)) {
+            reject({
+              status: false,
+              msg: "转换失败：文件过大或错误，接口超时未返回。",
+            });
+            clearInterval(spacer);
           }
         }
-      }, 3000);
+      }, interval * 1000);
     });
   }
 }
